@@ -2,10 +2,27 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <hb.h>
+#include <hb-ft.h>
 
 #include "../../grf.h"
+
+static int freetype_get_advance(FT_Face face, unsigned int charCode) 
+{
+    FT_UInt glyphIndex = FT_Get_Char_Index(face, charCode);
+    if (!glyphIndex)
+    {
+        return 0;
+    }
+    if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT))
+    {
+        return 0;
+    }
+    return (int)(face->glyph->advance.x >> 6);
+}
 
 int ttf_to_grf(const char* ttfPath, const char* grfPath, int size)
 {
@@ -37,19 +54,36 @@ int ttf_to_grf(const char* ttfPath, const char* grfPath, int size)
         return -1;
     }
 
+    hb_font_t *hbFont = hb_ft_font_create(face, NULL);
+    if (!hbFont) {
+        fprintf(stderr, "ttf2grf: error creating HarfBuzz font\n");
+        FT_Done_Face(face);
+        FT_Done_FreeType(library);
+        return -1;
+    }
+    hb_font_set_scale(hbFont, face->units_per_EM, face->units_per_EM);
+
+    hb_buffer_t *hbBuffer = hb_buffer_create();
+    hb_buffer_set_direction(hbBuffer, HB_DIRECTION_LTR);
+    hb_buffer_set_script(hbBuffer, HB_SCRIPT_LATIN);
+    hb_buffer_set_language(hbBuffer, hb_language_from_string("en", -1));
+
     FILE* output = fopen(grfPath, "wb");
     if (output == NULL)
     {
         fprintf(stderr, "ttf2grf: error opening '%s'\n", grfPath);
+        hb_font_destroy(hbFont);
+        hb_buffer_destroy(hbBuffer);
+        FT_Done_Face(face);
+        FT_Done_FreeType(library);
         return -1;
     }
 
-    grf_t grf;
+    grf_t grf = {0};
     grf.magic = GRF_MAGIC;
-    // Division by 64 due to FreeTypes pixed point stuff
-    grf.ascender = (int16_t)(face->size->metrics.ascender / 64);
-    grf.descender = (int16_t)(face->size->metrics.descender / 64);
-    grf.height = (int16_t)(face->size->metrics.height / 64);
+    grf.ascender = (int16_t)(face->size->metrics.ascender >> 6);
+    grf.descender = (int16_t)(face->size->metrics.descender >> 6);
+    grf.height = (int16_t)(face->size->metrics.height >> 6);
 
     uint8_t* glyphs = NULL;
     uint64_t glyphsSize = 0;
@@ -85,8 +119,8 @@ int ttf_to_grf(const char* ttfPath, const char* grfPath, int size)
         grf_glyph_t* glyph = (grf_glyph_t*)((uint8_t*)glyphs + (glyphsSize - currentGlyphSize));
         glyph->bearingX = face->glyph->bitmap_left;
         glyph->bearingY = face->glyph->bitmap_top;
-        glyph->advanceX = (int16_t)(face->glyph->advance.x / 64);
-        glyph->advanceY = (int16_t)(face->glyph->advance.y / 64);
+        glyph->advanceX = (int16_t)(face->glyph->advance.x >> 6);
+        glyph->advanceY = (int16_t)(face->glyph->advance.y >> 6);
         glyph->width = face->glyph->bitmap.width;
         glyph->height = face->glyph->bitmap.rows;
 
@@ -98,62 +132,77 @@ int ttf_to_grf(const char* ttfPath, const char* grfPath, int size)
     uint8_t* kernBlocks = NULL;
     uint64_t kernBlocksSize = 0;
 
-    if (FT_HAS_KERNING(face))
+    printf("ttf2grf: processing kerning using HarfBuzz...\n");
+
+    for (int firstChar = 0; firstChar < 256; firstChar++)
     {
-        for (int firstChar = 0; firstChar < 256; firstChar++)
+        FT_UInt firstIndex = FT_Get_Char_Index(face, firstChar);
+        if (firstIndex == 0)
         {
-            FT_UInt firstIndex = FT_Get_Char_Index(face, firstChar);
-            if (firstIndex == 0)
-            {
-                grf.kernOffsets[firstChar] = GRF_NONE;
+            grf.kernOffsets[firstChar] = GRF_NONE;
+            continue;
+        }
+
+        grf_kern_entry_t entries[256];
+        uint16_t entryAmount = 0;
+
+        int firstCharAdvance = freetype_get_advance(face, firstChar);
+        if (firstCharAdvance == 0 && firstChar != 0) { 
+            grf.kernOffsets[firstChar] = GRF_NONE;
+            continue;
+        }
+
+        for (int secondChar = 0; secondChar < 256; secondChar++)
+        {
+            FT_UInt secondIndex = FT_Get_Char_Index(face, secondChar);
+            if (secondIndex == 0)
+            {                    
                 continue;
             }
 
-            grf_kern_entry_t entries[256];
+            int secondCharAdvance = freetype_get_advance(face, secondChar);
+            if (secondCharAdvance == 0 && secondChar != 0) 
+            { 
+                continue;
+            }
 
-            uint16_t entryAmount = 0;
-            for (int secondChar = 0; secondChar < 256; secondChar++)
+            hb_buffer_clear_contents(hbBuffer);
+            hb_buffer_add_utf32(hbBuffer, (const uint32_t[]){(uint32_t)firstChar, (uint32_t)secondChar}, 2, 0, 2);
+            
+            hb_shape(hbFont, hbBuffer, NULL, 0);
+
+            unsigned int glyphCount;
+            hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(hbBuffer, &glyphCount);
+
+            if (glyphCount == 2)
             {
-                FT_UInt secondIndex = FT_Get_Char_Index(face, secondChar);
-                if (secondIndex == 0)
-                {
-                    continue;
-                }
-
-                FT_Vector delta;
-                error = FT_Get_Kerning(face, firstIndex, secondIndex, FT_KERNING_DEFAULT, &delta);
+                int16_t kernX = (int16_t)(glyphPos[1].x_offset >> 6);
+                int16_t kernY = (int16_t)(glyphPos[1].y_offset >> 6);
                 
-                if (error == 0 && (delta.x != 0 || delta.y != 0))
+                if (kernX != 0 || kernY != 0)
                 {
                     entries[entryAmount].secondChar = (uint8_t)secondChar;
-                    entries[entryAmount].offsetX = (int16_t)(delta.x / 64);
-                    entries[entryAmount].offsetY = (int16_t)(delta.y / 64);
+                    entries[entryAmount].offsetX = kernX;
+                    entries[entryAmount].offsetY = kernY;
                     entryAmount++;
                 }
             }
-
-            if (entryAmount > 0)
-            {
-                uint64_t currentBlockSize = sizeof(grf_kern_block_t) + sizeof(grf_kern_entry_t) * entryAmount;
-
-                kernBlocksSize += currentBlockSize;
-                kernBlocks = realloc(kernBlocks, kernBlocksSize);
-
-                grf_kern_block_t* block = (grf_kern_block_t*)(kernBlocks + kernBlocksSize - currentBlockSize);
-                block->amount = entryAmount;
-                memcpy(block->entries, entries, sizeof(grf_kern_entry_t) * entryAmount);
-
-                grf.kernOffsets[firstChar] = (uint32_t)(glyphsSize + ((uint64_t)block - (uint64_t)kernBlocks));
-            }
-            else
-            {
-                grf.kernOffsets[firstChar] = GRF_NONE;
-            }
         }
-    }
-    else
-    {
-        for (int firstChar = 0; firstChar < 256; firstChar++)
+
+        if (entryAmount > 0)
+        {
+            uint64_t currentBlockSize = sizeof(grf_kern_block_t) + sizeof(grf_kern_entry_t) * entryAmount;
+
+            kernBlocksSize += currentBlockSize;
+            kernBlocks = realloc(kernBlocks, kernBlocksSize);
+
+            grf_kern_block_t* block = (grf_kern_block_t*)(kernBlocks + kernBlocksSize - currentBlockSize);
+            block->amount = entryAmount;
+            memcpy(block->entries, entries, sizeof(grf_kern_entry_t) * entryAmount);
+
+            grf.kernOffsets[firstChar] = (uint32_t)(glyphsSize + ((uint64_t)block - (uint64_t)kernBlocks));
+        }
+        else
         {
             grf.kernOffsets[firstChar] = GRF_NONE;
         }
@@ -169,6 +218,10 @@ int ttf_to_grf(const char* ttfPath, const char* grfPath, int size)
     free(glyphs);
     free(kernBlocks);
     fclose(output);
+    
+    hb_buffer_destroy(hbBuffer);
+    hb_font_destroy(hbFont);
+
     FT_Done_Face(face);
     FT_Done_FreeType(library);
 

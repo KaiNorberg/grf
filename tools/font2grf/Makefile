@@ -3,8 +3,8 @@ OBJ = ${SRC:.c=.o}
 
 CC = gcc
 
-CFLAGS = -O3 $(shell pkg-config --cflags freetype2)
-LDFLAGS = $(shell pkg-config --libs freetype2)
+CFLAGS = -O3 $(shell pkg-config --cflags freetype2) $(shell pkg-config --cflags harfbuzz)
+LDFLAGS = $(shell pkg-config --libs freetype2) $(shell pkg-config --libs harfbuzz)
 
 all: ${SRC} font2grf
 

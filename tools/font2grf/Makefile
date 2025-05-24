@@ -6,13 +6,13 @@ CC = gcc
 CFLAGS = -O3 $(shell pkg-config --cflags freetype2)
 LDFLAGS = $(shell pkg-config --libs freetype2)
 
-all: ${SRC} ttf2grf
+all: ${SRC} font2grf
 
-ttf2grf: ${OBJ}
+font2grf: ${OBJ}
 	${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 ${SRC}:
 	${CC} ${CFLAGS} -o $@ -c $<
 
 clean:
-	rm -f ttf2grf ${OBJ}
+	rm -f font2grf ${OBJ}

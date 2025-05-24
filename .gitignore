@@ -52,4 +52,4 @@ Mkfile.old
 dkms.conf
 
 # Other
-tools/ttf2grf/ttf2grf
+tools/font2grf/font2grf

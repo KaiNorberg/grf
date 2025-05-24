@@ -152,7 +152,7 @@ int16_t grf_get_kerning_offset(const grf_t* grf, uint8_t firstChar, uint8_t seco
         {
             return block->entries[i].offsetX;
         }
-
+        // Becouse the entires are sorted, if we've passed the secondChar, then its not in the entries.
         if (block->entries[i].secondChar > (uint8_t)secondChar)
         {
             break;
@@ -161,10 +161,10 @@ int16_t grf_get_kerning_offset(const grf_t* grf, uint8_t firstChar, uint8_t seco
     return 0;
 }
 
-// The draw functions assume that we are using 32 bit ARGB.
+// The draw functions assume that we are using 32 bit ARGB. And that pixelsWidth, pixelsHeight and pixelsStride are in pixels not bytes.
 
 void grf_draw_char(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_t pixelsHeight, 
-    uint64_t pixelStride, uint64_t xPos, uint64_t yPos, char chr)
+    uint64_t pixelsStride, uint64_t xPos, uint64_t yPos, char chr)
 {
     uint32_t offset = grf->glyphOffsets[chr];
     if (offset == GRF_NONE) // Glyph does not exist
@@ -195,7 +195,7 @@ void grf_draw_char(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_t 
                 // The "gray" value is a transperancy value so we we blend the current value in the pixels buffer
                 // and a pure white pixel based of the gray value.
 
-                uint32_t pixel = pixels[targetY * pixelStride + targetX];
+                uint32_t pixel = pixels[targetY * pixelsStride + targetX];
                 
                 // Change this to change the color of the text
                 uint32_t srcAlpha = gray;
@@ -211,14 +211,14 @@ void grf_draw_char(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_t 
                 uint32_t outG = (srcG * srcAlpha + destG * (255 - srcAlpha)) / 255;
                 uint32_t outB = (srcB * srcAlpha + destB * (255 - srcAlpha)) / 255;
 
-                pixels[targetY * pixelStride + targetX] = (0xFF << 24) | (outR << 16) | (outG << 8) | outB;
+                pixels[targetY * pixelsStride + targetX] = (0xFF << 24) | (outR << 16) | (outG << 8) | outB;
             }
         }
     }
 }
 
 void grf_draw_string(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_t pixelsHeight,
-    uint64_t pixelStride, uint64_t xPos, uint64_t yPos, const char* string, uint64_t length)
+    uint64_t pixelsStride, uint64_t xPos, uint64_t yPos, const char* string, uint64_t length)
 {
     int32_t currentX = xPos;
     int32_t currentY = yPos;
@@ -232,7 +232,7 @@ void grf_draw_string(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_
         }
         grf_glyph_t* glyph = (grf_glyph_t*)(&grf->buffer[offset]);
 
-        draw_char(grf, pixels, pixelsWidth, pixelsHeight, pixelStride, currentX, currentY, (uint8_t)string[i]);
+        grf_draw_char(grf, pixels, pixelsWidth, pixelsHeight, pixelsStride, currentX, currentY, (uint8_t)string[i]);
 
         currentX += glyph->advanceX;
         // Apply kerning if the char is not the last char.

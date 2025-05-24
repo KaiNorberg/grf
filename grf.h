@@ -33,7 +33,7 @@ typedef struct GRF_PACK_STRUCT
     int16_t height;             // Total line height in pixels.
     uint32_t glyphOffsets[256]; // Offsets to each grf_glyph_t in grf_t::buffer, indexed by ascii chars. GRF_NONE means "none".
     uint32_t kernOffsets[256];  // Offsets to each grf_kern_block_t in grf_t::buffer, indexed by the starting ascii char. GRF_NONE means "none".
-    uint8_t buffer[];           // Glyphs and kernel info is stored here. No guarantee of glyph or kerning orders, could be one after the other, interleaved, etc, always use the offsets.
+    uint8_t buffer[];           // Glyphs and kerning info is stored here. No guarantee of glyph or kerning orders, could be one after the other, interleaved, etc, always use the offsets.
 } grf_t;
 
 typedef struct GRF_PACK_STRUCT

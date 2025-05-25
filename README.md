@@ -45,7 +45,7 @@ This structure is a fixed-size header located at the very beginning of the `.grf
 
 | Offset | Type                     | Description                                                                                                                                                             |
 | :----- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0      | `uint32_t`               | Magic value, should be equat to GRF0 in ascii or 0x47524630.                                                                                                           |
+| 0      | `uint32_t`               | Magic value, should be equat to GRF0 in ascii or 0x47524630, last byte acts as version number.                                                                          |
 | 4      | `int16_t`                | Font ascender in pixels.                                                                                                                                                |
 | 6      | `int16_t`                | Font descender in pixels.                                                                                                                                               |
 | 8      | `int16_t`                | Total line height in pixels.                                                                                                                                            |

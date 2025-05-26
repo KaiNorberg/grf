@@ -20,7 +20,7 @@ Below is a list of the currently available tools for .grf.
 
 ### font2grf
 
-Can be used to convert modern font formats, for instance .ttf to .grf.
+Can be used to convert modern font formats to .grf, for example .ttf to .grf.
 
 The tool can be used with the following steps.
 

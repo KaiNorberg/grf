@@ -86,6 +86,10 @@ This structure contains a list of kerning entries for a specific starting charac
 | 0      | `uint16_t`       | The amount of kerning entries for this char                                                                                                                                                                                                                                                                                                                             |
 | 2      | `grf_kern_entry_t[]` | The entries, these entries will always be sorted by char, so the entry for 'A' is before 'B', this allows for `O(log N)` look ups. |
 
+## Advice for using this format
+
+If you are planning to use this font format I highly recommend using a font with good kerning, most modern font renderers using something like .ttf do a lot of fancy stuff to improve the kerning of fonts, all that fancy stuff is basically impossible with this format so we have to solely rely on the font itself, a example of a font with good kerning is (Lato)[https://fonts.google.com/specimen/Lato].
+
 ## Example in C
 
 The following is a example of how you could use this image format in C. Note the use of the [grf.h](grf.h) file.

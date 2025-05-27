@@ -142,7 +142,7 @@ grf_t* grf_load(const char* path)
     return grf;
 }
 
-// Helper function to get kerning offset
+// Helper function to get kerning offset, note that this could be optimized using binary search since the array is sorted.
 int16_t grf_get_kerning_offset(const grf_t* grf, uint8_t firstChar, uint8_t secondChar)
 {
     uint32_t offset = grf->kernOffsets[firstChar];

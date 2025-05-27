@@ -86,7 +86,7 @@ This structure contains a list of kerning entries for a specific starting charac
 | Offset | Type             | Description                                                                                                                                                                                                                                                                                                                                                                     |
 | :----- | :--------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0      | `uint16_t`       | The amount of kerning entries for this char                                                                                                                                                                                                                                                                                                                             |
-| 2      | `grf_kern_entry_t[]` | The entries, these entries will always be sorted by char, so the entry for 'A' is before 'B', this allows for `O(log N)` look ups. |
+| 2      | `grf_kern_entry_t[]` | The entries, these entries will always be sorted by char, so the entry for 'A' is before 'B', this allows for efficient look ups using binary search. |
 
 ## Advice for using this format
 

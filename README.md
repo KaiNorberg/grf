@@ -8,7 +8,7 @@ Modern font formats like .ttf are incredibly complicated and out of reach to mos
 
 ## What is it?
 
-A .grf file supports ailiasing, kerning and other alignment variables, but it is rasterized meaning it stores raw pixel data instead of using curves to define its glyphs like modern fonts do. This allows us to skip the most complicated part of modern fonts, actually rasterizing it, this is not unusual as this is how basic bitmap fonts work, however they only use 1 bit to store their pixel data leading to pixelated fonts, we on the other hand use 1 byte (8 bit grayscale) for each pixel where 0x00 means "fully transperant" and 0xFF means "fully solid". The .grf format also attempts to minimize the amount of postprocessing required after loading a font, with the goal of being as simple as possible balanced with the desire for good-*ish* looking fonts.
+A .grf file supports anti-ailiasing, kerning and other alignment variables, but it is rasterized meaning it stores raw pixel data instead of using curves to define its glyphs like modern fonts do. This allows us to skip the most complicated part of modern fonts, actually rasterizing it, this is not unusual as this is how basic bitmap fonts work, however they only use 1 bit to store their pixel data leading to pixelated fonts, we on the other hand use 1 byte (8 bit grayscale) for each pixel where 0x00 means "fully transperant" and 0xFF means "fully solid". The .grf format also attempts to minimize the amount of postprocessing required after loading a font, with the goal of being as simple as possible balanced with the desire for good-*ish* looking fonts.
 
 ## Limitations
 

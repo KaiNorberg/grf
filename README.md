@@ -53,6 +53,8 @@ This structure is a fixed-size header located at the very beginning of the `.grf
 | 1034   | `uint32_t[256]`          | Offsets to each `grf_kern_block_t` in `grf_t::buffer`, indexed by the starting ascii char. `GRF_NONE` means "none".                                                     |
 | 2058   | `uint8_t[]`              | Glyphs and kerning info is stored here. No guarantee of glyph or kerning orders, could be one after the other, interleaved, etc, always use the offsets.                |
 
+Note that the value of `GRF_NONE` is `UINT32_MAX` and that a offset of 0 is valid.
+
 ### `grf_glyph_t` (Glyph Structure)
 
 This structure defines the bitmap data and metrics for a single character (glyph).

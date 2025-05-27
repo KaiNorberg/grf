@@ -27,7 +27,7 @@
 GRF_PACK_START
 typedef struct GRF_PACK_STRUCT
 {
-    uint32_t magic;             // GRF0.
+    uint32_t magic;             // Magic value, should be equal to GRF0 in ascii or 0x47524630, last byte acts as version number.
     int16_t ascender;           // Font ascender in pixels.
     int16_t descender;          // Font descender in pixels.
     int16_t height;             // Total line height in pixels.
@@ -57,7 +57,7 @@ typedef struct GRF_PACK_STRUCT
 typedef struct GRF_PACK_STRUCT
 {
     uint16_t amount;            // The amount of kerning entries for this char
-    grf_kern_entry_t entries[]; // The entries, these entries will always be sorted by char, so the entry for 'A' is before 'B', this allows for O(log N) look ups.
+    grf_kern_entry_t entries[]; // The entries, these entries will always be sorted by char, so the entry for 'A' is before 'B', this allows for efficient look ups using binary search.
 } grf_kern_block_t;
 GRF_PACK_END
 

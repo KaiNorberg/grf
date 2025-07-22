@@ -94,7 +94,7 @@ This structure contains a list of kerning entries for a specific starting charac
 
 ## Advice for using this format
 
-If you are planning to use this font format I highly recommend using a font with good kerning, most modern font renderers using something like .ttf do a lot of fancy stuff to improve the kerning of fonts, all that fancy stuff is basically impossible with this format so we have to solely rely on the font itself, a example of a font with good kerning is [Lato](https://fonts.google.com/specimen/Lato).
+If you are planning to use this font format I highly recommend using a font with good kerning, most modern font renderers do a lot of fancy stuff to improve the kerning of fonts, all that fancy stuff is basically impossible with this format so we have to solely rely on the kernel in the font itself, a example of a font with good kerning is [Lato](https://fonts.google.com/specimen/Lato).
 
 ## Example in C
 

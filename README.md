@@ -31,6 +31,10 @@ The tool can be used with the following steps.
 
 Done!
 
+## Screenshots
+
+![Desktop Screenshot from PatchworkOS](meta/screenshots/desktop.png)
+
 ## Implementations
 
 * [PatchworkOS](https://github.com/KaiNorberg/PatchworkOS) Hobbyist OS

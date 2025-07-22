@@ -169,7 +169,6 @@ int16_t grf_get_kerning_offset(const grf_t* grf, uint8_t firstChar, uint8_t seco
 }
 
 // The draw functions assume that we are using 32 bit ARGB. 
-// And that pixelsWidth, pixelsHeight and pixelsStride are in pixels not bytes.
 
 void grf_draw_char(grf_t* grf, uint32_t* pixels, uint64_t pixelsWidth, uint64_t pixelsHeight, 
     uint64_t pixelsStride, uint64_t xPos, uint64_t yPos, char chr)
